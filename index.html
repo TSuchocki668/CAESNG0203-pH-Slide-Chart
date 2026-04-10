@@ -1,0 +1,181 @@
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,serif;background:#fff;padding:14px 20px;max-width:700px;margin:0 auto}
+  h2{text-align:center;font-size:17px;font-weight:bold;color:#111827;margin-bottom:12px}
+  .zones{display:flex;justify-content:space-between;margin-bottom:6px}
+  .z{font-size:12px;font-weight:bold}
+  .z-a{color:#b91c1c}.z-n{color:#15803d}.z-b{color:#1d4ed8}
+  .bar-wrap{position:relative;padding:28px 0 6px;touch-action:none;user-select:none}
+  .bar{width:100%;height:34px;border-radius:17px;background:linear-gradient(to right,#dc2626,#ea580c 14%,#ca8a04 29%,#84cc16 43%,#22c55e 50%,#14b8a6 64%,#0ea5e9 79%,#1d4ed8);position:relative;cursor:pointer}
+  .marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;border:2px solid white;z-index:4;transition:transform .15s,box-shadow .15s;pointer-events:none}
+  .marker.lit{transform:translate(-50%,-50%) scale(1.7);box-shadow:0 0 8px 2px var(--mc)}
+  .marker.text-point{width:13px;height:13px;border:2.5px solid white}
+  .thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:white;border:3px solid #374151;z-index:10;cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.28);transition:box-shadow .15s}
+  .thumb:active{cursor:grabbing;box-shadow:0 3px 14px rgba(0,0,0,.38)}
+  .ph-bubble{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:#111827;color:white;padding:3px 10px;border-radius:20px;font-size:13px;font-weight:bold;white-space:nowrap;pointer-events:none}
+  .ticks{display:flex;justify-content:space-between;margin-top:2px;padding:0 0px}
+  .tick{font-size:10px;color:#6b7280;text-align:center;flex:1}
+  .card{min-height:120px;border-radius:12px;padding:16px 18px;margin-top:14px;border-left:5px solid #e5e7eb;background:#f9fafb;transition:border-color .25s,background .25s}
+  .card-ph{font-size:11px;color:#6b7280;margin-bottom:3px;font-style:italic}
+  .card-title{font-size:15px;font-weight:bold;color:#111827;margin-bottom:7px}
+  .card-body{font-size:13px;line-height:1.68;color:#374151}
+  .card-idle{color:#9ca3af;font-style:italic;font-size:13px;padding-top:8px}
+  .card-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-bottom:6px;font-style:italic}
+  .hint{font-size:11px;color:#9ca3af;font-style:italic;text-align:center;margin-top:8px}
+  .tagline{font-size:11px;color:#aaa;font-style:italic;margin-top:18px;text-align:left}
+</style>
+
+<h2>The pH Scale</h2>
+
+<div class="zones">
+  <span class="z z-a">Acidic</span>
+  <span class="z z-n">Neutral</span>
+  <span class="z z-b">Alkaline</span>
+</div>
+
+<div class="bar-wrap" id="barWrap">
+  <div class="bar" id="bar">
+    <div class="thumb" id="thumb">
+      <div class="ph-bubble" id="bubble">pH 7</div>
+    </div>
+  </div>
+  <div class="ticks" id="ticks"></div>
+</div>
+
+<div class="card" id="card">
+  <p class="card-idle">Drag the slider to explore the pH scale and discover what lives at each level.</p>
+</div>
+
+<p class="hint">Drag the slider — some discoveries are surprising</p>
+<p class="tagline">Environmental Science through Nature's Genius</p>
+
+<script>
+const points = [
+  {ph:0,  color:'#dc2626', fromText:false,
+   title:'Acidophile environments', sub:'pH 0–1',
+   tag:'Surprising', tagBg:'#fef2f2', tagColor:'#b91c1c',
+   body:'Picrophilus torridus grows at pH 0 in volcanic soils in Japan — so acidic it dissolves most metals. These organisms maintain near-neutral chemistry inside their cells through specialized membrane proteins, revealing that life can adapt to conditions hostile to almost every other organism on Earth.'},
+  {ph:2,  color:'#ea580c', fromText:true,
+   title:'Stomach acid', sub:'pH 2',
+   tag:'From the text', tagBg:'#fff7ed', tagColor:'#c2410c',
+   body:'Human stomach acid is strong enough to denature most proteins and kill the majority of ingested bacteria. The stomach lining protects itself with a thick mucus layer renewed every few days. Helicobacter pylori survives here by producing enzymes that neutralize acid locally — one of the few organisms that can call your stomach home.'},
+  {ph:3.5,color:'#b45309', fromText:false,
+   title:'Acid rain', sub:'pH 3–5',
+   tag:'Surprising', tagBg:'#fefce8', tagColor:'#92400e',
+   body:'Unaffected rainfall is already slightly acidic at pH 5.6, due to dissolved CO₂. Industrial acid rain — formed when sulfur dioxide and nitrogen oxides dissolve in atmospheric moisture — can reach pH 3 to 4. This level dissolves calcium carbonate from fish eggs and aquatic invertebrate shells, disrupting freshwater food webs across entire lake systems.'},
+  {ph:5,  color:'#a16207', fromText:false,
+   title:'Black coffee and forest soils', sub:'pH 5',
+   tag:'Surprising', tagBg:'#fefce8', tagColor:'#92400e',
+   body:'Black coffee sits around pH 5 — mild and familiar. Many forest soils share this range, shaped by organic acids released as fallen leaves decompose. Blueberries, azaleas, and many conifers thrive near pH 4.5 to 5.5, where specific nutrients become chemically accessible and others are locked away.'},
+  {ph:5.7,color:'#65a30d', fromText:false,
+   title:'Human skin surface', sub:'pH 5.5–6',
+   tag:'Surprising', tagBg:'#f0fdf4', tagColor:'#15803d',
+   body:'Your skin maintains a pH of 5.5 to 6 — slightly acidic. This "acid mantle" inhibits the growth of harmful bacteria while supporting beneficial microbes in your skin microbiome. Many soaps and cleansers disrupt this balance, which is why skin can feel dry or irritated after washing.'},
+  {ph:7,  color:'#22c55e', fromText:false,
+   title:'Pure water', sub:'pH 7',
+   tag:'Reference point', tagBg:'#f0fdf4', tagColor:'#15803d',
+   body:'Pure water is the chemical definition of neutral — equal concentrations of hydrogen and hydroxide ions. Most healthy freshwater ecosystems sit near this range. Fish, amphibians, and aquatic invertebrates are highly sensitive to pH shifts, which is why acid rain — dropping lake pH toward 5 — is so ecologically damaging.'},
+  {ph:7.4,color:'#0f766e', fromText:true,
+   title:'Human blood', sub:'pH 7.4',
+   tag:'From the text', tagBg:'#f0fdfa', tagColor:'#0f766e',
+   body:'Your blood maintains pH 7.4 with remarkable precision. A shift of just 0.2 units causes measurable symptoms. A shift of 0.4 units can be fatal. Chemical buffers — molecules that absorb or release hydrogen ions — and continuous fine-tuning by the kidneys and lungs keep blood chemistry locked within this narrow window.'},
+  {ph:8.1,color:'#0369a1', fromText:true,
+   title:'Ocean', sub:'pH 8.1',
+   tag:'From the text', tagBg:'#eff6ff', tagColor:'#1d4ed8',
+   body:'The ocean averages pH 8.1, slightly alkaline. Since industrialization began, ocean pH has dropped by 0.1 units as seawater absorbs excess CO₂, which forms carbonic acid. That 0.1 shift represents a 26% increase in acidity — enough to weaken coral skeletons, oyster shells, and the calcium carbonate structures of countless marine organisms.'},
+  {ph:9,  color:'#2563eb', fromText:false,
+   title:'Baking soda and alkaline soils', sub:'pH 9',
+   tag:'Surprising', tagBg:'#eff6ff', tagColor:'#1d4ed8',
+   body:'Baking soda dissolved in water reaches about pH 9. Some desert soils and dry lake beds reach similar alkalinity as minerals accumulate where rainfall is scarce. Specialized plants including saltbush and certain grasses tolerate these conditions by concentrating or excluding alkaline ions through specialized root chemistry.'},
+  {ph:11, color:'#4f46e5', fromText:false,
+   title:'East African soda lakes', sub:'pH 10–12',
+   tag:'Surprising', tagBg:'#eef2ff', tagColor:'#4338ca',
+   body:'Lake Natron in Tanzania and Lake Bogoria in Kenya reach pH 10 to 12 — caustic enough to damage unprotected skin. Yet lesser flamingos, sometimes in the millions, feed almost exclusively on the alkaliphilic cyanobacterium Arthrospira, which thrives here. Extreme alkalinity deters most predators, making soda lakes among the safest nesting environments on Earth.'}
+];
+
+const SNAP = 0.55;
+let currentPh = 7;
+let dragging = false;
+
+const bar  = document.getElementById('bar');
+const thumb= document.getElementById('thumb');
+const bubble=document.getElementById('bubble');
+const card = document.getElementById('card');
+const ticks= document.getElementById('ticks');
+
+for(let i=0;i<=14;i++){
+  const t=document.createElement('span');
+  t.className='tick';
+  t.textContent=i;
+  ticks.appendChild(t);
+}
+
+const markers=[];
+points.forEach(p=>{
+  const m=document.createElement('div');
+  m.className='marker'+(p.fromText?' text-point':'');
+  m.style.setProperty('--mc',p.color);
+  m.style.background=p.color;
+  m.style.left=phToPercent(p.ph)+'%';
+  bar.appendChild(m);
+  markers.push({el:m,point:p});
+});
+
+function phToPercent(ph){return (ph/14)*100}
+function percentToPh(pct){return Math.max(0,Math.min(14,pct*14/100))}
+
+function posFromEvent(e){
+  const rect=bar.getBoundingClientRect();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  return Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+}
+
+function updateFromFraction(frac){
+  const ph=frac*14;
+  currentPh=ph;
+  const pct=frac*100;
+  thumb.style.left=pct+'%';
+  bubble.textContent='pH '+ph.toFixed(1);
+  updateMarkers(ph);
+  updateCard(ph);
+}
+
+function updateMarkers(ph){
+  markers.forEach(({el,point})=>{
+    const near=Math.abs(point.ph-ph)<SNAP;
+    el.classList.toggle('lit',near);
+  });
+}
+
+function updateCard(ph){
+  let nearest=null,dist=Infinity;
+  points.forEach(p=>{
+    const d=Math.abs(p.ph-ph);
+    if(d<dist){dist=d;nearest=p;}
+  });
+  if(dist<SNAP&&nearest){
+    card.style.borderColor=nearest.color;
+    card.style.background=nearest.fromText?'#f9fafb':'#fafafa';
+    card.innerHTML=`
+      <div class="card-ph">${nearest.sub}</div>
+      <div class="card-title">${nearest.title}</div>
+      <span class="card-tag" style="background:${nearest.tagBg};color:${nearest.tagColor}">${nearest.tag}</span>
+      <p class="card-body">${nearest.body}</p>`;
+  } else {
+    card.style.borderColor='#e5e7eb';
+    card.style.background='#f9fafb';
+    card.innerHTML=`<p class="card-idle" style="padding-top:8px">pH ${ph.toFixed(1)} — keep sliding to discover points of interest</p>`;
+  }
+}
+
+thumb.addEventListener('mousedown',e=>{dragging=true;e.preventDefault();});
+document.addEventListener('mousemove',e=>{if(dragging)updateFromFraction(posFromEvent(e));});
+document.addEventListener('mouseup',()=>dragging=false);
+bar.addEventListener('click',e=>updateFromFraction(posFromEvent(e)));
+
+thumb.addEventListener('touchstart',e=>{dragging=true;e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',e=>{if(dragging)updateFromFraction(posFromEvent(e));},{passive:true});
+document.addEventListener('touchend',()=>dragging=false);
+
+updateFromFraction(0.5);
+</script>
